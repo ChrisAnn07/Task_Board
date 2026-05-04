@@ -40,7 +40,6 @@ export default function Board() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Task Board</h1>
         <button
@@ -51,7 +50,6 @@ export default function Board() {
         </button>
       </div>
 
-      {/* Columns */}
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-4 gap-4">
           {COLUMNS.map(col => (
@@ -65,12 +63,11 @@ export default function Board() {
         </div>
       </DndContext>
 
-      {/* Create Task Modal */}
       {showModal && (
         <CreateTaskModal
           onClose={() => setShowModal(false)}
-          onCreate={async (title, description, priority) => {
-            await createTask(title, description, priority)
+           onCreate={async (title, description, priority, label, label_color) => {
+            await createTask(title, description, priority, label, label_color)
             setShowModal(false)
           }}
         />

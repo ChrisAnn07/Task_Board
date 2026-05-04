@@ -2,24 +2,56 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 import { Priority } from '../types/task'
 
+const LABEL_COLORS = [
+  '#EB4C4C',
+  '#FF8C00', 
+  '#F5C518',
+  '#22C55E',
+  '#3B82F6',
+  '#A855F7',
+  '#EC4899',
+  '#9CA3AF',
+]
+
 interface CreateTaskModalProps {
   onClose: () => void
-  onCreate: (title: string, description?: string, priority?: Priority) => void
+  onCreate: (
+    title: string,
+    description?: string,
+    priority?: Priority,
+    label?: string,
+    label_color?: string
+  ) => void
 }
 
 export default function CreateTaskModal({ onClose, onCreate }: CreateTaskModalProps) {
-  const [title, setTitle]           = useState('')
+  const [title, setTitle]             = useState('')
   const [description, setDescription] = useState('')
-  const [priority, setPriority]     = useState<Priority | ''>('')
-  const [dueDate, setDueDate]       = useState('')
+  const [priority, setPriority]       = useState<Priority | ''>('')
+  const [dueDate, setDueDate]         = useState('')
+  const [label, setLabel]             = useState('')
+  const [labelColor, setLabelColor]   = useState('')
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim()) return
-    onCreate(title.trim(), description.trim() || undefined, priority || undefined)
-    setTitle(''); setDescription(''); setPriority(''); setDueDate('')
-    onClose()
-  }
+  console.log('label:', label)
+  console.log('labelColor:', labelColor)
+  e.preventDefault()
+  if (!title.trim()) return
+
+  console.log('label:', label)
+  console.log('labelColor:', labelColor)
+
+  onCreate(
+    title.trim(),
+    description.trim() || undefined,
+    priority || undefined,
+    label.trim() || undefined,
+    labelColor || undefined
+  )
+  setTitle(''); setDescription(''); setPriority('')
+  setDueDate(''); setLabel(''); setLabelColor('')
+  onClose()
+}
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -69,6 +101,50 @@ export default function CreateTaskModal({ onClose, onCreate }: CreateTaskModalPr
               type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             />
+          </div>
+
+          {/* Label name + color picker */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Label</label>
+            <input
+              type="text" value={label} onChange={e => setLabel(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-3"
+              placeholder="Enter label name"
+            />
+
+            {/* Only show color picker if label has text */}
+            {label.trim() && (
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Pick a color for this label</p>
+                <div className="flex gap-2 flex-wrap">
+                  {LABEL_COLORS.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setLabelColor(color)}
+                      className="w-8 h-8 rounded-full transition-transform hover:scale-110"
+                      style={{
+                        backgroundColor: color,
+                        outline: labelColor === color ? `3px solid ${color}` : 'none',
+                        outlineOffset: '2px',
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* Preview */}
+                {labelColor && (
+                  <div className="mt-2">
+                    <span
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                      style={{ backgroundColor: labelColor }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">

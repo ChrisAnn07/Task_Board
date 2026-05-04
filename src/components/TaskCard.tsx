@@ -19,6 +19,19 @@ export default function TaskCard({ task }: { task: Task }) {
       <div className="flex items-start gap-2">
         <GripVertical className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
         <div className="flex-1 min-w-0">
+
+         
+          {task.label && (
+            <div className="mb-2">
+              <span
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                style={{ backgroundColor: task.label_color ?? '#1b386e' }}
+              >
+                {task.label}
+              </span>
+            </div>
+          )}
+
           <h3 className="font-medium text-gray-900 mb-1">{task.title}</h3>
           {task.description && (
             <p className="text-sm text-gray-600 mb-3">{task.description}</p>

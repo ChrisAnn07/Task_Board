@@ -23,7 +23,17 @@ export function useTasks() {
     setLoading(false)
   }
 
-  async function createTask(title: string, description?: string, priority?: string) {
+  async function createTask(
+    title: string,
+    description?: string,
+    priority?: string,
+    label?: string,
+    label_color?: string
+  ) {
+
+    console.log('label param:', label)
+  console.log('label_color param:', label_color)
+
     const { data: { user } } = await supabase.auth.getUser()
 
     const { error } = await supabase.from('tasks').insert({
@@ -31,12 +41,16 @@ export function useTasks() {
       description,
       priority: priority ?? 'normal',
       status: 'todo',
-      user_id: user!.id
+      user_id: user!.id,
+      label: label ?? null,
+      label_color: label_color ?? null
     })
 
     if (error) setError(error.message)
     else fetchTasks()
   }
+
+  
 
   async function updateTaskStatus(id: string, status: Status) {
     const { error } = await supabase

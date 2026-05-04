@@ -19,7 +19,29 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  
+    const { tasks, loading, error, createTask, updateTaskStatus } = useTasks()
 
+    const [filterLabel, setFilterLabel] = useState<string>('')
+
+const availableLabels = Array.from(
+  new Set(tasks.filter(t => t.label).map(t => t.label as string))
+)
+
+// Filtered tasks
+const filteredTasks = filterLabel
+  ? tasks.filter(t => t.label === filterLabel)
+  : tasks
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over) return
+    const newStatus = over.id as Status
+    const task = tasks.find(t => t.id === active.id)
+    if (task && task.status !== newStatus) {
+      await updateTaskStatus(task.id, newStatus)
+    }
+  }
   // Guest auth on load
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -40,17 +62,7 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const { tasks, loading, error, createTask, updateTaskStatus } = useTasks()
-
-  async function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    if (!over) return
-    const newStatus = over.id as Status
-    const task = tasks.find(t => t.id === active.id)
-    if (task && task.status !== newStatus) {
-      await updateTaskStatus(task.id, newStatus)
-    }
-  }
+  
 
   if (authLoading) return (
     <div className="flex items-center justify-center h-screen">
@@ -69,22 +81,55 @@ export default function App() {
       <div className="min-h-screen bg-gray-100 overflow-auto">
         <div className="max-w-7xl mx-auto p-6">
 
-          {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Task Board</h1>
-              <p className="text-gray-600 mt-1">Drag and drop tasks to update their status</p>
-            </div>
+     
+<div className="mb-6 flex items-center justify-between">
+  <div>
+    <h1 className="text-3xl font-bold text-gray-900">Task Board</h1>
+    <p className="text-gray-600 mt-1">Drag and drop tasks to update their status</p>
+  </div>
+  <div className="flex items-center gap-3">
+   
+    {availableLabels.length > 0 && (
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-gray-600">Filter:</span>
+        <button
+          onClick={() => setFilterLabel('')}
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            filterLabel === ''
+              ? 'bg-gray-800 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          All
+        </button>
+        {availableLabels.map(label => {
+          const labelTask = tasks.find(t => t.label === label)
+          return (
             <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              key={label}
+              onClick={() => setFilterLabel(label === filterLabel ? '' : label)}
+              className="px-3 py-1 rounded-full text-xs font-medium text-white transition-opacity hover:opacity-80"
+              style={{
+                backgroundColor: labelTask?.label_color ?? '#9CA3AF',
+                outline: filterLabel === label ? '3px solid #1f2937' : 'none',
+                outlineOffset: '2px'
+              }}
             >
-              <Plus className="w-5 h-5" />
-              New Task
+              {label}
             </button>
-          </div>
-
-          {/* Loading / Error states */}
+          )
+        })}
+      </div>
+    )}
+    <button
+      onClick={() => setIsModalOpen(true)}
+      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+    >
+      <Plus className="w-5 h-5" />
+      New Task
+    </button>
+  </div>
+</div>
           {loading && (
             <div className="mb-4 flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg">
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -98,29 +143,29 @@ export default function App() {
             </div>
           )}
 
-          {/* Columns */}
           <div className="flex gap-4 overflow-x-auto pb-4">
             {COLUMNS.map(col => (
               <Column
                 key={col.id}
                 id={col.id}
                 label={col.label}
-                tasks={tasks.filter(t => t.status === col.id)}
+                tasks={filteredTasks.filter(t => t.status === col.id)}
               />
             ))}
           </div>
         </div>
 
-        {/* Modal */}
         {isModalOpen && (
           <CreateTaskModal
             onClose={() => setIsModalOpen(false)}
-            onCreate={async (title, description, priority) => {
-              await createTask(title, description, priority)
-              setIsModalOpen(false)
-            }}
+            onCreate={async (title, description, priority, label, label_color) => {
+                await createTask(title, description, priority, label, label_color)
+                setIsModalOpen(false)
+}}
           />
         )}
+
+        
       </div>
     </DndContext>
   )
